@@ -50,5 +50,25 @@ if __name__ == '__main__':
 
         data_fc.edge_attr[i, 0] = compute_edge_fc(data.edge_attr[i, 0], start_attr, end_attr)
 
-        with open('data_fc.pkl', 'wb') as out:
-            pickle.dump(data_fc, out, pickle.HIGHEST_PROTOCOL)
+    data_fc.edge_attr = data_fc.edge_attr - data_fc.edge_attr.min() + 1e-3  # NCTM
+
+    # CNM
+    data_fc_before = deepcopy(data_fc)
+
+    for i, (start, end) in enumerate(data_fc.edge_index.T):
+        start = int(start)
+        end = int(end)
+
+        _, start_edges, _, _ = k_hop_subgraph(start, 1, data_fc_before.edge_index)
+        _, end_edges, _, _ = k_hop_subgraph(end, 1, data_fc_before.edge_index)
+
+        mask_start = [start in start_edges[:, j] for j in range(start_edges.shape[1])]
+        start_degree = start_edges[:, mask_start].shape[1]
+
+        mask_end = [end in end_edges[:, j] for j in range(end_edges.shape[1])]
+        end_degree = end_edges[:, mask_end].shape[1]
+
+        data_fc.edge_attr[i, 0] = data_fc.edge_attr[i, 0] / np.sqrt(start_degree * end_degree)
+
+    with open('data_fc.pkl', 'wb') as out:
+        pickle.dump(data_fc, out, pickle.HIGHEST_PROTOCOL)

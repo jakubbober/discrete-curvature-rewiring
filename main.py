@@ -31,12 +31,11 @@ class GCN(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-if __name__ == '__main__':
-
+def train_data(data_path):
     # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     device = 'cpu'
     model = GCN().to(device)
-    with open('data_fc.pkl', 'rb') as data:
+    with open(data_path, 'rb') as data:
         data_fc = pickle.load(data)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
@@ -54,3 +53,13 @@ if __name__ == '__main__':
     correct = (pred[data_fc.test_mask] == data_fc.y[data_fc.test_mask]).sum()
     acc = int(correct) / int(data_fc.test_mask.sum())
     print(f'Accuracy: {acc:.4f}')
+
+
+if __name__ == '__main__':
+    train_data('data_fc.pkl')
+    train_data('data_original.pkl')
+    with open('data_fc.pkl', 'rb') as dt:
+        data_fc = pickle.load(dt)
+    with open('data_original.pkl', 'rb') as dt:
+        data = pickle.load(dt)
+    print()
