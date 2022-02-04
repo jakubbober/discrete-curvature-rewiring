@@ -1,3 +1,4 @@
+import argparse
 from time import time
 
 from GraphRicciCurvature.FormanRicci import FormanRicci
@@ -7,7 +8,12 @@ from torch_geometric.utils import to_networkx
 from utils import load_data
 
 if __name__ == '__main__':
-    dt = load_data('data', 'Computers')
+    parser = argparse.ArgumentParser(description='CGNN')
+    parser.add_argument('--data_path', type=str, help="Path to the data files.", default='./data')
+    parser.add_argument('--dataset', type=str, help="Name of the dataset", required=True)
+    args = parser.parse_args()
+
+    dt = load_data(args.data_path, args.dataset)
 
     G = to_networkx(dt, to_undirected=dt.is_undirected())
     orc = OllivierRicci(G, alpha=0.5)
