@@ -5,6 +5,8 @@ import numpy as np
 # import pandas as pd
 from copy import deepcopy
 import torch
+from GraphRicciCurvature.FormanRicci import FormanRicci
+from GraphRicciCurvature.OllivierRicci import OllivierRicci
 from torch_geometric.utils import to_networkx, from_networkx, to_dense_adj, remove_self_loops, to_undirected
 
 from balanced_forman import ricci, ricci_post_delta
@@ -33,13 +35,21 @@ def sdrf_w_cuda(
     if is_undirected:
         G = G.to_undirected()
     A = A.cuda()
-    # C = torch.zeros(N, N).cuda()
 
     for x in range(loops):
         can_add = True
         _logger.warn(f'\n#######\nLoop {x}!\n#######\n')
-        C = ricci(A)
-        if x == 0:
+        # C = ricci(A)  # TODO change to other curvatures
+        frc = FormanRicci(G, method='1d')
+        frc.compute_ricci_curvature()
+        # orc = OllivierRicci(G)
+        # orc.compute_ricci_curvature()
+        C = torch.zeros(N, N).cuda()
+        for v1, v2 in frc.G.edges:
+            C[v1, v2] = frc.G[v1][v2]['formanCurvature']
+        # for v1, v2 in orc.G.edges:
+        #     C[v1, v2] = orc.G[v1][v2]['ricciCurvature']
+        if x == loops - 1:
             out_balanced = ""
             for v1, v2 in G.edges:
                 out_balanced += f"{v1} {v2} {C[v1, v2]}\n"
@@ -53,6 +63,8 @@ def sdrf_w_cuda(
         if is_undirected:
             x_neighbors = list(G.neighbors(x)) + [x]
             y_neighbors = list(G.neighbors(y)) + [y]
+            # x_neighbors = list(G.neighbors(x))
+            # y_neighbors = list(G.neighbors(y))
         else:
             raise Exception('not undirected')
             # x_neighbors = list(G.successors(x)) + [x]
@@ -60,11 +72,17 @@ def sdrf_w_cuda(
         _logger.warn(f'x has successors {x_neighbors}')
         _logger.warn(f'y has successors {y_neighbors}')
         candidates = []
-        for i in x_neighbors:
-            for j in y_neighbors:
-                if (i != j) and (not G.has_edge(i, j)):
-                    candidates.append((i, j))
+        # for i in x_neighbors:
+        #     for j in y_neighbors:
+        #         if (i != j) and (not G.has_edge(i, j)):
+        #             candidates.append((i, j))
 
+        for i in x_neighbors:
+            if (i != y) and (not G.has_edge(i, y)):
+                candidates.append((i, y))
+        for i in y_neighbors:
+            if (i != x) and (not G.has_edge(i, x)):
+                candidates.append((x, i))
         if len(candidates):
             D = ricci_post_delta(A, x, y, x_neighbors, y_neighbors)
             improvements = []
@@ -79,7 +97,7 @@ def sdrf_w_cuda(
             ]
             _logger.warn(f'New edge chosen is {k, l}')
             G.add_edge(k, l)
-            A_old = deepcopy(A)
+
             if is_undirected:
                 A[k, l] = A[l, k] = 1
             else:
@@ -94,7 +112,7 @@ def sdrf_w_cuda(
             ix_max = C.argmax().item()
             x = ix_max // N
             y = ix_max % N
-            if C[x, y] > 0.5:
+            if C[x, y] > 0.2:
                 _logger.warn(f'Max curvature {C[x, y]} at {x}->{y} - removing edge')
                 G.remove_edge(x, y)
                 if is_undirected:
@@ -102,7 +120,7 @@ def sdrf_w_cuda(
                 else:
                     A[x, y] = 0
             else:
-                _logger.warn('Max curvature is <= 0.5 - leaving in place')
+                _logger.warn('Max curvature is <= 1.2 - leaving in place')
                 if can_add is False:
                     _logger.warn(f'Nothing changed this round - breaking')
                     break

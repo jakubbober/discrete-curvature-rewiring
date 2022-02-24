@@ -1,0 +1,17 @@
+All have 20 experiments, linear NCTM, symmetry-norm CNM
+
+Olliver Ricci:
+Cora: Mean: 81.410000, std: 0.612291, time: 1.054318904876709
+Citeseer: Mean: 71.325000, std: 0.740861, time: 1.3935539722442627
+PubMed: Mean: 77.860000, std: 0.537029 (when self-executing, the process was killed due to too much resource allocation, probably RAM)
+CS: Mean: 92.465000, std: 0.321364 (killed)
+Photo: Mean: 91.140000, std: 0.576541, time: 51.0086145401001
+Computers: Mean: 83.265000, std: 0.603552 (killed)
+
+Forman Ricci:
+Cora: Mean: 82.210000, std: 0.611474, time: 0.14658832550048828
+Citeseer: Mean 71.710000, std: 0.546717, time: 0.10769152641296387
+PubMed: Mean: 78.325000, std: 0.513688, time: 1.8304033279418945
+CS: Mean: 92.060000, std: 0.348425, time: 3.4513769149780273
+Photo: Mean: 91.365000, std: 0.535980, time: 22.910581588745117
+Computers: Mean: 83.585000, std: 0.882766, time: 82.10784649848938

@@ -10,20 +10,19 @@ class GCN(torch.nn.Module):
 
         # Initialize the layers
         self.conv1 = GCNConv(d_input, d_hidden)
-        self.conv2 = GCNConv(d_hidden, d_hidden)
-        self.out = Linear(d_hidden, d_output)
+        self.conv2 = GCNConv(d_hidden, d_output)
+        # self.out = Linear(d_hidden, d_output)
 
-    def forward(self, x, edge_index):
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
         # First Message Passing Layer (Transformation)
         x = self.conv1(x, edge_index)
         x = x.relu()
-        x = F.dropout(x, p=0.5, training=self.training)
+        x = F.dropout(x, training=self.training)
 
         # Second Message Passing Layer
         x = self.conv2(x, edge_index)
-        x = x.relu()
-        x = F.dropout(x, p=0.5, training=self.training)
 
         # Output layer
-        x = F.softmax(self.out(x), dim=1)
+        x = F.softmax(x, dim=1)
         return x
