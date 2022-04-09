@@ -8,6 +8,7 @@ from torch_geometric.nn import GCNConv #GATConv
 from torch_geometric.transforms import NormalizeFeatures
 
 from gcn import GCN
+from sdrf_rewritten import sdrf
 
 
 def test(model):
@@ -48,13 +49,15 @@ if __name__ == '__main__':
     # dataset = pickle.load(file)
     # file.close()
 
-    with open('rewiring_edges', 'rb') as file:
-        edges = pickle.load(file)
+    # with open('rewiring_edges', 'rb') as file:
+    #     edges = pickle.load(file)
 
     dataset = Planetoid(root='data/Planetoid', name='Cora')
 
     # storing the graph in the data variable
     data = dataset[0]
+
+    data = sdrf(data, 'bfc', tau=0.8, max_iter=100, C=0.5)
 
     # data.edge_index = edges
 

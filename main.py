@@ -109,4 +109,5 @@ if __name__ == '__main__':
     # args.model = 'CGNN'
     # args.model_type = 'CGNN_{}_{}_{}'.format(args.NCTM, args.CNM, args.dropout)
     # d_input, d_output = datasets_config[args.dataset]['d_input'], datasets_config[args.dataset]['d_output']
+    # ds = datasets_config[args.dataset]
     main(args, 1433, 7)

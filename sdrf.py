@@ -53,7 +53,7 @@ def sdrf_w_cuda(
             out_balanced = ""
             for v1, v2 in G.edges:
                 out_balanced += f"{v1} {v2} {C[v1, v2]}\n"
-            with open('balanced_forman.edge_list', 'w') as file:
+            with open('data/BalancedForman/balanced_forman.edge_list', 'w') as file:
                 file.write(out_balanced)
         ix_min = C.argmin().item()
         x = ix_min // N
@@ -72,17 +72,17 @@ def sdrf_w_cuda(
         _logger.warn(f'x has successors {x_neighbors}')
         _logger.warn(f'y has successors {y_neighbors}')
         candidates = []
-        # for i in x_neighbors:
-        #     for j in y_neighbors:
-        #         if (i != j) and (not G.has_edge(i, j)):
-        #             candidates.append((i, j))
-
         for i in x_neighbors:
-            if (i != y) and (not G.has_edge(i, y)):
-                candidates.append((i, y))
-        for i in y_neighbors:
-            if (i != x) and (not G.has_edge(i, x)):
-                candidates.append((x, i))
+            for j in y_neighbors:
+                if (i != j) and (not G.has_edge(i, j)):
+                    candidates.append((i, j))
+
+        # for i in x_neighbors:
+        #     if (i != y) and (not G.has_edge(i, y)):
+        #         candidates.append((i, y))
+        # for i in y_neighbors:
+        #     if (i != x) and (not G.has_edge(i, x)):
+        #         candidates.append((x, i))
         if len(candidates):
             D = ricci_post_delta(A, x, y, x_neighbors, y_neighbors)
             improvements = []
