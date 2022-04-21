@@ -1,6 +1,7 @@
 import argparse
 from time import time
 
+import torch
 from GraphRicciCurvature.FormanRicci import FormanRicci
 from GraphRicciCurvature.OllivierRicci import OllivierRicci
 from torch_geometric.utils import to_networkx
@@ -44,25 +45,41 @@ def bfc(G: nx.Graph) -> nx.Graph:
     return G
 
 
-def compute_curvature(data_path, dataset, curv_type, save_file=False):
-    dt = load_data(data_path, dataset)
-
-    G = to_networkx(dt, to_undirected=dt.is_undirected())
+def compute_curvature(G, curv_type, dataset=None):
+    # save file if dataset name given
     # start = time()
+    N = len(G.edges)
+    C = torch.zeros(N, N)
     if curv_type == 'ricciCurvature':
-        G = OllivierRicci(G, alpha=0.5).compute_ricci_curvature().G
+        orc = OllivierRicci(G, alpha=0.5)
+        orc.compute_ricci_curvature()
+        G = orc.G
+        for v1, v2 in G.edges:
+            C[v1, v2] = G[v1][v2]['ricciCurvature']
+            C[v2, v1] = C[v1, v2]
     elif curv_type == 'formanCurvature':
-        G = FormanRicci(G, method="1d").compute_ricci_curvature().G
+        # print(FormanRicci(G, method="1d").compute_ricci_curvature())
+        frc = FormanRicci(G, method="1d")
+        frc.compute_ricci_curvature()
+        G = frc.G
+        for v1, v2 in G.edges:
+            # if G[v1][v2]['formanCurvature'] != G[v2][v1]['formanCurvature']:
+            #     print((v1, v2))
+            # else:
+                # print(1)
+            C[v1, v2] = G[v1][v2]['formanCurvature']
+            C[v2, v1] = C[v1, v2]
     else:
         G = bfc(G)
     # print("Curvature computation time:", time() - start)
-    if save_file:
+
+    if dataset:
         out = ""
         for v1, v2 in G.edges:
             out += f"{v1} {v2} {G[v1][v2][curv_type]}\n"
         with open(f"graph_{dataset}_{curv_type}.edge_list", "w") as f:
             f.write(out)
-    return G
+    return G, C.cpu().numpy()
 
 
 if __name__ == '__main__':
@@ -73,4 +90,8 @@ if __name__ == '__main__':
     parser.add_argument('--save_file', action='store_true', help="Whether to save the .edge_list file", default=False)
     args = parser.parse_args()
 
-    compute_curvature(args.data_path, args.dataset, args.curv_type, args.save_file)
+    dt = load_data(args.data_path, args.dataset)
+
+    G = to_networkx(dt, to_undirected=dt.is_undirected())
+
+    compute_curvature(G, args.curv_type, args.save_file)
