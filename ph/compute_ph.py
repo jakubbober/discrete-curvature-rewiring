@@ -1,4 +1,5 @@
 import pickle
+import time
 
 import matplotlib
 import networkx as nx
@@ -59,15 +60,16 @@ def compute_ph(data: torch_geometric.data.Data, curv_type: str, filename: str=No
     return pairs
 
 
-def compute_ph_giotto(data: torch_geometric.data.Data, curv_type: str, filename: str=None):
+def compute_ph_giotto(data: torch_geometric.data.Data, i, curv_type: str, filename: str=None):
     G = to_networkx(data, node_attrs=['x'])
     G, C = compute_curvature(G, curv_type)
 
     VR = VietorisRipsPersistence(metric='precomputed', reduced_homology=False, collapse_edges=True, n_jobs=-1)
 
     # C = random_graph_adj(30, p=0.9, ax=None).toarray() * 1.0
-    C[C != 0] = C[C != 0] + C.min() + 1
-    points = VR.fit_transform_plot([C])
+    # C[C != 0] += 1 - C.min()
+    points = VR.fit_transform([C[:i, :i]])
+
     if filename:
         with open(filename, 'wb') as f:
             pickle.dump(points, f)
@@ -96,4 +98,11 @@ if __name__ == '__main__':
     #               , show=False, ax=ax2)
     # plt.show()
     data = load_data('../data', 'Cora')
-    compute_ph_giotto(data, 'formanCurvature', 'forman_Cora_ph')
+
+    a = 2000
+    for i in range(1):
+        start = time.time()
+        results = compute_ph_giotto(data, a, 'formanCurvature')
+        print(time.time() - start)
+        print(results)
+        a *= 2
