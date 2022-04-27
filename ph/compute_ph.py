@@ -4,8 +4,9 @@ import time
 import matplotlib
 import networkx as nx
 import numpy as np
-import ripserplusplus as rpp
+# import ripserplusplus as rpp
 import torch_geometric.data
+from gtda.plotting import plot_diagram
 from matplotlib import pyplot as plt
 from networkx import fast_gnp_random_graph, adjacency_matrix
 # from ripser import ripser
@@ -15,6 +16,7 @@ from torch_geometric.utils import to_networkx
 import gudhi
 
 from compute_curvature import compute_curvature
+from ph import ApproxPH
 from utils import load_data
 
 matplotlib.use('WebAgg')
@@ -60,15 +62,21 @@ def compute_ph(data: torch_geometric.data.Data, curv_type: str, filename: str=No
     return pairs
 
 
-def compute_ph_giotto(data: torch_geometric.data.Data, i, curv_type: str, filename: str=None):
-    G = to_networkx(data, node_attrs=['x'])
-    G, C = compute_curvature(G, curv_type)
+def compute_ph_giotto(C, i=None, filename: str=None):
+    # print(len(data.edge_index))
+    # G = to_networkx(data, node_attrs=['x'])
+    # G, C = compute_curvature(G, curv_type)
 
-    VR = VietorisRipsPersistence(metric='precomputed', reduced_homology=False, collapse_edges=True, n_jobs=-1)
+    VR = VietorisRipsPersistence(metric='precomputed', reduced_homology=False, collapse_edges=True, n_jobs=-1, homology_dimensions=(0, 1))
 
     # C = random_graph_adj(30, p=0.9, ax=None).toarray() * 1.0
     # C[C != 0] += 1 - C.min()
-    points = VR.fit_transform([C[:i, :i]])
+    start = time.time()
+    if i:
+        points = VR.fit_transform([C[:i, :i]])
+    else:
+        points = VR.fit_transform([C])
+    print(time.time() - start)
 
     if filename:
         with open(filename, 'wb') as f:
@@ -80,6 +88,12 @@ def compute_ph_giotto(data: torch_geometric.data.Data, i, curv_type: str, filena
 def ripscomplex(X, hdim=1):
     pairs = rpp.run("--format distance --dim " + str(hdim), X)
     return pairs
+
+
+def compute_ph_subsample(data: torch_geometric.data.Data, curv_type: str, i=None, filename: str=None):
+    G = to_networkx(data, node_attrs=['x'])
+    G, C = compute_curvature(G, curv_type)
+    ApproxPH.get_subsample()
 
 
 if __name__ == '__main__':
@@ -97,12 +111,24 @@ if __name__ == '__main__':
     #                np.array((pairs[2].tolist())).reshape((len(pairs[2]), 2))]
     #               , show=False, ax=ax2)
     # plt.show()
+
+
     data = load_data('../data', 'Cora')
 
-    a = 2000
-    for i in range(1):
-        start = time.time()
-        results = compute_ph_giotto(data, a, 'formanCurvature')
-        print(time.time() - start)
-        print(results)
-        a *= 2
+    # a = 2000
+    G = to_networkx(data, node_attrs=['x'])
+    G, C = compute_curvature(G, 'formanCurvature')
+    results = compute_ph_giotto(C, 200)
+
+    print(results)
+
+    # a *= 2
+
+    # with open('forman_Cora_ph', 'rb') as f:
+    #     print(pickle.load(f))
+
+    # with open('forman_Cora_ph', 'rb') as f:
+    #     ph = pickle.load(f)
+    # print(ph[0])
+    # fig = plot_diagram(ph[0])
+    # fig.show()
