@@ -17,14 +17,14 @@ import gudhi
 
 from compute_curvature import compute_curvature
 from ph import ApproxPH
-from utils import load_data
+from utils.load_data import load_data
 
 matplotlib.use('WebAgg')
 # fig, (ax1, ax2) = plt.subplots(1, 2)
 
 
 def random_graph_adj(nodes, ax=None, p=0.3, directed=False, w_low=1, w_high=20):
-    G = fast_gnp_random_graph(int(nodes), p, seed=1, directed=directed)
+    G = fast_gnp_random_graph(int(nodes), p, directed=directed)
 
     # nx.draw(G, ax=ax1)
     # plt.show()
@@ -32,9 +32,9 @@ def random_graph_adj(nodes, ax=None, p=0.3, directed=False, w_low=1, w_high=20):
     adj = adjacency_matrix(G)
     # print(adj.toarray())
     # print(adj.toarray())
-    # a = np.random.randint(w_low, w_high, adj.shape)
-    with open('a', 'rb') as f:
-        a = pickle.load(f)
+    a = np.random.randint(w_low, w_high, adj.shape)
+    # with open('a', 'rb') as f:
+    #     a = pickle.load(f)
     # print(a)
     a = (a + a.T) // 2
     # print(a)
@@ -44,22 +44,22 @@ def random_graph_adj(nodes, ax=None, p=0.3, directed=False, w_low=1, w_high=20):
     return b
 
 
-def compute_ph(data: torch_geometric.data.Data, curv_type: str, filename: str=None):
-    G = to_networkx(data, node_attrs=['x'])
-    G, C = compute_curvature(G, curv_type)
-    print(C)
-    C[C != 0] = C[C != 0] + C.min() + 1
-
-    pairs = ripscomplex(C, hdim=3)
-    plot_diagrams([np.array((pairs[0].tolist())).reshape((len(pairs[0]), 2)),
-                   np.array((pairs[1].tolist())).reshape((len(pairs[1]), 2)),
-                   np.array((pairs[2].tolist())).reshape((len(pairs[2]), 2))]
-                  , show=False, ax=ax2)
-
-    with open(filename, 'wb') as f:
-        pickle.dump(pairs, f)
-
-    return pairs
+# def compute_ph(data: torch_geometric.data.Data, curv_type: str, filename: str=None):
+#     G = to_networkx(data, node_attrs=['x'])
+#     G, C = compute_curvature(G, curv_type)
+#     # print(C)
+#     C[C != 0] = C[C != 0] + C.min() + 1
+# 
+#     pairs = ripscomplex(C, hdim=3)
+#     plot_diagrams([np.array((pairs[0].tolist())).reshape((len(pairs[0]), 2)),
+#                    np.array((pairs[1].tolist())).reshape((len(pairs[1]), 2)),
+#                    np.array((pairs[2].tolist())).reshape((len(pairs[2]), 2))]
+#                   , show=False, ax=ax2)
+# 
+#     with open(filename, 'wb') as f:
+#         pickle.dump(pairs, f)
+# 
+#     return pairs
 
 
 def compute_ph_giotto(C, i=None, filename: str=None):
@@ -67,7 +67,7 @@ def compute_ph_giotto(C, i=None, filename: str=None):
     # G = to_networkx(data, node_attrs=['x'])
     # G, C = compute_curvature(G, curv_type)
 
-    VR = VietorisRipsPersistence(metric='precomputed', reduced_homology=False, collapse_edges=True, n_jobs=-1, homology_dimensions=(0, 1))
+    VR = VietorisRipsPersistence(metric='precomputed', reduced_homology=True, collapse_edges=True, n_jobs=-1, homology_dimensions=tuple([1]), max_edge_length=2)
 
     # C = random_graph_adj(30, p=0.9, ax=None).toarray() * 1.0
     # C[C != 0] += 1 - C.min()
@@ -76,7 +76,7 @@ def compute_ph_giotto(C, i=None, filename: str=None):
         points = VR.fit_transform([C[:i, :i]])
     else:
         points = VR.fit_transform([C])
-    print(time.time() - start)
+    # print(time.time() - start)
 
     if filename:
         with open(filename, 'wb') as f:
@@ -116,16 +116,17 @@ if __name__ == '__main__':
     data = load_data('../data', 'Cora')
 
     # a = 2000
-    G = to_networkx(data, node_attrs=['x'])
+    G = to_networkx(data, node_attrs=['x']).to_undirected()
     G, C = compute_curvature(G, 'formanCurvature')
-    results = compute_ph_giotto(C, 200)
+    print(len(G.edges))
+    results = compute_ph_giotto(C)
 
     print(results)
 
     # a *= 2
 
-    # with open('forman_Cora_ph', 'rb') as f:
-    #     print(pickle.load(f))
+    with open('forman_Cora_ph_long', 'rb') as f:
+        print(pickle.dump(results, f))
 
     # with open('forman_Cora_ph', 'rb') as f:
     #     ph = pickle.load(f)

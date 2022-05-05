@@ -10,7 +10,7 @@ def plot_curvatures(ollivier, forman, balanced):
     with open(ollivier, 'r') as ol, open(forman, 'r') as fr, open(balanced, 'r') as bl:
         for i, file in enumerate([ol, fr, bl]):
             curvatures = np.array([float(line.split(' ')[-1].replace("\n", "")) for line in file])
-            curvatures = (curvatures - curvatures.mean()) / curvatures.std()
+            # curvatures = (curvatures - curvatures.mean()) / curvatures.std()
             plt.figure(i)
             plt.scatter(range(len(curvatures)), curvatures)
             # plt.legend(*scatter.legend_elements())
@@ -18,4 +18,4 @@ def plot_curvatures(ollivier, forman, balanced):
 
 
 if __name__ == '__main__':
-    plot_curvatures('data/Ollivier/graph_Cora.edge_list', 'data/Forman/graph_Cora.edge_list', 'balanced_forman.edge_list')
+    plot_curvatures('data/Ollivier/graph_Cora.edge_list', 'data/Forman/graph_Cora.edge_list', 'data/BalancedForman/graph_Cora.edge_list')

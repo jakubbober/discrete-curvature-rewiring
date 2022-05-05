@@ -2,6 +2,7 @@ import argparse
 from time import time
 
 import torch
+# from forman_curvature import FormanRicci
 from GraphRicciCurvature.FormanRicci import FormanRicci
 from GraphRicciCurvature.OllivierRicci import OllivierRicci
 from torch_geometric.utils import to_networkx
@@ -92,6 +93,6 @@ if __name__ == '__main__':
 
     dt = load_data(args.data_path, args.dataset)
 
-    G = to_networkx(dt, to_undirected=dt.is_undirected())
+    G = to_networkx(dt).to_undirected()
 
     compute_curvature(G, args.curv_type, args.save_file)
