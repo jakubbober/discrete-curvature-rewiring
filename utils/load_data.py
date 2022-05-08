@@ -8,7 +8,13 @@ import torch_geometric.transforms as T
 from utils.TranductiveDataset import TranductiveDataset
 
 
-def load_data(data_path, d_name):
+def load_data(data_path: str, d_name: str) -> torch_geometric.data.data.Data:
+    """
+    Load torch_geometric data.
+    :param data_path: string denoting the path to all the torch_geometric data.
+    :param d_name: name of the specific dataset to be loaded.
+    :return: given torch_geometric dataset.
+    """
     if d_name == 'Cora' or d_name == 'Citeseer' or d_name == 'PubMed':
         d_loader = 'Planetoid'
     elif d_name == 'Computers' or d_name == 'Photo':
@@ -43,6 +49,7 @@ def load_data(data_path, d_name):
 
 
 def _sample_per_class(random_state, labels, num_examples_per_class):
+    """Helper function for load_data()."""
     num_classes = max(labels) + 1
     sample_indices_per_class = {index: [] for index in range(num_classes)}
 
@@ -60,6 +67,7 @@ def _sample_per_class(random_state, labels, num_examples_per_class):
 
 
 def _split_to_binary(node_num, indices):
+    """Helper function for load_data()."""
     data = np.zeros(node_num, dtype=bool)
     data[indices] = True
     return data

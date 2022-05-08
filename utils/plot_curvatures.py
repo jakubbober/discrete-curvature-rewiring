@@ -1,21 +1,28 @@
 import matplotlib
-import tornado
-matplotlib.use('WebAgg')
+
 import matplotlib.pyplot as plt
 import numpy as np
 
+matplotlib.use('WebAgg')
 
-def plot_curvatures(ollivier, forman, balanced):
-    # plt.interactive(False)
-    with open(ollivier, 'r') as ol, open(forman, 'r') as fr, open(balanced, 'r') as bl:
-        for i, file in enumerate([ol, fr, bl]):
-            curvatures = np.array([float(line.split(' ')[-1].replace("\n", "")) for line in file])
-            # curvatures = (curvatures - curvatures.mean()) / curvatures.std()
-            plt.figure(i)
-            plt.scatter(range(len(curvatures)), curvatures)
-            # plt.legend(*scatter.legend_elements())
-    plt.show()
+
+def plot_curvatures(curv_type: str, d_name: str, normalize: bool = False) -> None:
+    """
+    Plot given type of curvature for given input data.
+    :param curv_type: type of curvature ('Ollivier', 'Forman' or 'BalancedForman').
+    :param d_name: dataset name.
+    :param normalize: if True, normalize the curvature points to have zero mean and unit variance.
+    """
+    with open(f'../data/{curv_type}/graph_{d_name}.edge_list', 'r') as f:
+        curvatures = np.array([float(line.split(' ')[-1].replace("\n", "")) for line in f])
+        if normalize:
+            curvatures = (curvatures - curvatures.mean()) / curvatures.std()
+        plt.scatter(range(len(curvatures)), curvatures)
+        plt.title(f'{curv_type} Curvature')
 
 
 if __name__ == '__main__':
-    plot_curvatures('data/Ollivier/graph_Cora.edge_list', 'data/Forman/graph_Cora.edge_list', 'data/BalancedForman/graph_Cora.edge_list')
+    for i, curvature in enumerate(('Ollivier', 'Forman', 'BalancedForman')):
+        plt.figure(i)
+        plot_curvatures(curvature, 'Cora')
+    plt.show()

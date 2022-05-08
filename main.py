@@ -1,11 +1,10 @@
 import argparse
-import pickle
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 
-from gcn import GCN
+from models.gcn import GCN
 from utils import load_data
 
 

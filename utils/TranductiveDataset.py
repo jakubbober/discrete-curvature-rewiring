@@ -3,6 +3,8 @@ from torch_geometric.data import InMemoryDataset
 
 
 class TranductiveDataset(InMemoryDataset):
+    """Custom dataset for load_data.load_data()."""
+
     def __init__(self, root, transform=None, pre_transform=None):
         super(TranductiveDataset, self).__init__(root, transform, pre_transform)
         self.data, self.slices = torch.load(self.processed_paths[0])

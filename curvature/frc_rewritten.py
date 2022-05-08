@@ -2,6 +2,18 @@ import networkx as nx
 import math
 
 
+def augmented(G, v1, v2):
+    v1_nbr = set(G.neighbors(v1))
+    # v1_nbr.remove(v2)
+    v2_nbr = set(G.neighbors(v2))
+    # v2_nbr.remove(v1)
+
+    # face = v1_nbr & v2_nbr
+    face = v1_nbr.intersection(v2_nbr)
+
+    return 4 - G.degree[v1] - G.degree[v2] + 4 * len(face)
+
+
 class FormanRicci:
     def __init__(self, G: nx.Graph, weight="weight", method="augmented", verbose="ERROR"):
         """A class to compute Forman-Ricci curvature for all nodes and edges in G.
@@ -51,29 +63,28 @@ class FormanRicci:
             self.G[v1][v2]["formanCurvature"] = w_e * (w_v1 / w_e + w_v2 / w_e - (ev1_sum + ev2_sum))
         elif self.method == 'augmented':
             v1_nbr = set(self.G.neighbors(v1))
-            v1_nbr.remove(v2)
+            # v1_nbr.remove(v2)
             v2_nbr = set(self.G.neighbors(v2))
-            v2_nbr.remove(v1)
+            # v2_nbr.remove(v1)
 
-            face = v1_nbr & v2_nbr
-            # prl_nbr = (v1_nbr | v2_nbr) - face
+            # face = v1_nbr & v2_nbr
+            face = v1_nbr.intersection(v2_nbr)
+            # w_e = 1
+            # w_f = 1  # Assume all face have weight 1
+            # w_v1 = 1
+            # w_v2 = 1
+            #
+            # sum_ef = sum([w_e / w_f for _ in face])
+            # sum_ve = sum([w_v1 / w_e + w_v2 / w_e])
+            #
+            # sum_ehef = 0  # Always 0 for cycle = 3 case.
+            # sum_veeh = sum([w_v1 / math.sqrt(w_e * 1) for v in (v1_nbr - face)] +
+            #                [w_v2 / math.sqrt(w_e * 1) for v in (v2_nbr - face)])
+            #
+            # self.G[v1][v2]["formanCurvature"] = w_e * (sum_ef + sum_ve - math.fabs(sum_ehef - sum_veeh))
+            self.G[v1][v2]["formanCurvature"] = 4 - self.G.degree[v1] - self.G.degree[v2] + 4 * len(face)
 
-            w_e = 1
-            w_f = 1  # Assume all face have weight 1
-            w_v1 = 1
-            w_v2 = 1
 
-            sum_ef = sum([w_e / w_f for _ in face])
-            sum_ve = sum([w_v1 / w_e + w_v2 / w_e])
-
-            # sum_ehef = sum([math.sqrt(w_e*self.G[v1][v][self.weight])/w_f +
-            #                 math.sqrt(w_e*self.G[v2][v][self.weight])/w_f
-            #                 for v in face])
-            sum_ehef = 0  # Always 0 for cycle = 3 case.
-            sum_veeh = sum([w_v1 / math.sqrt(w_e * 1) for v in (v1_nbr - face)] +
-                           [w_v2 / math.sqrt(w_e * 1) for v in (v2_nbr - face)])
-
-            self.G[v1][v2]["formanCurvature"] = w_e * (sum_ef + sum_ve - math.fabs(sum_ehef - sum_veeh))
 
     def compute_ricci_curvature(self):
         """Compute Forman-ricci curvature for all nodes and edges in G.

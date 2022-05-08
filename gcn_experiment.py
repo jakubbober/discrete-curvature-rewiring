@@ -1,14 +1,9 @@
-import pickle
 import torch
 import argparse
-from torch.nn import Linear
-import torch.nn.functional as F
 from torch_geometric.datasets import Planetoid
-from torch_geometric.nn import GCNConv #GATConv
-from torch_geometric.transforms import NormalizeFeatures
 
-from gcn import GCN
-from sdrf_rewritten import sdrf
+from models.gcn import GCN
+from curvature.sdrf_rewritten import sdrf
 
 
 def test(model):
