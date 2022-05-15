@@ -52,7 +52,7 @@ if __name__ == '__main__':
     # storing the graph in the data variable
     data = dataset[0]
 
-    data = sdrf(data, 'bfc', tau=0.8, max_iter=100, C=0.5)
+    data = sdrf(data, 'bfc', max_iter=100, C=0.5)
 
     # data.edge_index = edges
 

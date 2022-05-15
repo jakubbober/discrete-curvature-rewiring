@@ -10,8 +10,9 @@ def augmented(G, v1, v2):
 
     # face = v1_nbr & v2_nbr
     face = v1_nbr.intersection(v2_nbr)
-
-    return 4 - G.degree[v1] - G.degree[v2] + 4 * len(face)
+    # print(len(face))
+    # print(4 - G.degree[v1] - G.degree[v2] + 3 * len(face))
+    return 4 - G.degree[v1] - G.degree[v2] + 3 * len(face)
 
 
 class FormanRicci:

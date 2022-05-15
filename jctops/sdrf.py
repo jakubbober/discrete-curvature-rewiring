@@ -1,7 +1,7 @@
 import copy
 import logging
 import pickle
-
+from GraphRicciCurvature import FormanRicci, OllivierRicci
 import numpy as np
 import torch
 from torch_geometric.utils import to_networkx, from_networkx, to_dense_adj, remove_self_loops, to_undirected
@@ -13,20 +13,20 @@ from utils.load_data import load_data
 _logger = logging.getLogger(__name__)
 
 
-def softmax(a, tau=1):
+def softmax(a, tau=0.7):
     exp_a = np.exp(a * tau)
     return exp_a / exp_a.sum()
 
 
-def sdrf_w_cuda(data, loops=10, remove_edges=True, tau=1, is_undirected=True, remove_threshold=0.5):
+def sdrf_w_cuda(data, loops=10, remove_edges=True, tau=0.7, is_undirected=True, remove_threshold=0.5):
     edge_index = data.edge_index
-    if is_undirected:
-        edge_index = to_undirected(edge_index)
+    # if is_undirected:
+    edge_index = to_undirected(edge_index)
+
     A = to_dense_adj(remove_self_loops(edge_index)[0])[0]
     N = A.shape[0]
-    G = to_networkx(data, node_attrs=['x'])
-    if is_undirected:
-        G = G.to_undirected()
+    G = to_networkx(data, node_attrs=['x'], to_undirected=True)
+
     A = A.cuda()
     C = torch.zeros(N, N).cuda()
 

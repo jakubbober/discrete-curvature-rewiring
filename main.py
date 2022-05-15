@@ -74,39 +74,31 @@ def main(args, d_input, d_output):
                      np.std(test_acc_list)))
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='CGNN')
-    # parser.add_argument('--data_path', type=str, help="Path of saved processed data files.", default='./data')
-    # parser.add_argument('--dataset', type=str, help="Name of the datasets", required=True)
-    parser.add_argument('--d_hidden', type=int, help="Dimension of the hidden node features", default=16)
-    parser.add_argument('--epochs', type=int, help="The maximum iterations of training", default=200)
-    parser.add_argument('--num_expriment', type=int, help="The number of the repeating expriments", default=20)
-    parser.add_argument('--early_stop', type=int, help="Early stop", default=0)
-    parser.add_argument('--dropout', type=float, help="Dropout", default=0.5)
-    parser.add_argument('--lr', type=float, help="Learning rate", default=0.005)
-    parser.add_argument('--weight_decay', type=float, help="Weight decay", default=0.0005)
-    args = parser.parse_args()
-
-    # datasets_config = {
-    #     'Cora': {'d_input': 1433,
-    #              'd_output': 7},
-    #     'Citeseer': {'d_input': 3703,
-    #                  'd_output': 6},
-    #     'PubMed': {'d_input': 500,
-    #                'd_output': 3},
-    #     'CS': {'d_input': 6805,
-    #            'd_output': 15},
-    #     'Physics': {'d_input': 8415,
-    #                 'd_output': 5},
-    #     'Computers': {'d_input': 767,
-    #                   'd_output': 10},
-    #     'Photo': {'d_input': 745,
-    #               'd_output': 8},
-    #     'WikiCS': {'d_input': 300,
-    #                'd_output': 10},
+    # parser = argparse.ArgumentParser(description='CGNN')
+    # # parser.add_argument('--data_path', type=str, help="Path of saved processed data files.", default='./data')
+    # # parser.add_argument('--dataset', type=str, help="Name of the datasets", required=True)
+    # parser.add_argument('--d_hidden', type=int, help="Dimension of the hidden node features", default=16)
+    # parser.add_argument('--epochs', type=int, help="The maximum iterations of training", default=200)
+    # parser.add_argument('--num_expriment', type=int, help="The number of the repeating expriments", default=20)
+    # parser.add_argument('--early_stop', type=int, help="Early stop", default=0)
+    # parser.add_argument('--dropout', type=float, help="Dropout", default=0.5)
+    # parser.add_argument('--lr', type=float, help="Learning rate", default=0.005)
+    # parser.add_argument('--weight_decay', type=float, help="Weight decay", default=0.0005)
+    # args = parser.parse_args()
+    #
+    # classes = {
+    #     'Cora': 7,
+    #     'Citeseer': 6,
+    #     'PubMed': 3,
+    #     'CS': 15,
+    #     'Physics': 5,
+    #     'Computers': 10,
+    #     'Photo': 8,
+    #     'WikiCS': 10,
     # }
 
     # args.model = 'CGNN'
     # args.model_type = 'CGNN_{}_{}_{}'.format(args.NCTM, args.CNM, args.dropout)
     # d_input, d_output = datasets_config[args.dataset]['d_input'], datasets_config[args.dataset]['d_output']
     # ds = datasets_config[args.dataset]
-    main(args, 1433, 7)
+    # main(args, 1433, 7)
