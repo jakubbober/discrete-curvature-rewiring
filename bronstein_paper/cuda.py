@@ -192,7 +192,7 @@ def sdrf(
     remove_edges=True,
     removal_bound=0.5,
     tau=1,
-    is_undirected=False,
+    is_undirected=True,
 ):
     edge_index = data.edge_index
     if is_undirected:
@@ -214,10 +214,10 @@ def sdrf(
 
         if is_undirected:
             x_neighbors = list(G.neighbors(x)) + [x]
-            y_neighbors = list(G.neighbors(y)) + [x]
+            y_neighbors = list(G.neighbors(y)) + [y]  # changed from x to y
         else:
             x_neighbors = list(G.successors(x)) + [x]
-            y_neighbors = list(G.predecessors(y)) + [x]
+            y_neighbors = list(G.predecessors(y)) + [y]  # changed from x to y
         candidates = []
         for i in x_neighbors:
             for j in y_neighbors:

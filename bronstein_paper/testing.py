@@ -1,3 +1,4 @@
+import pickle
 import random
 
 import numpy as np
@@ -9,7 +10,7 @@ from bronstein_paper.gcn import GCN
 from bronstein_paper.node_classification import train, evaluate
 from bronstein_paper.optimizer import get_optimizer
 from bronstein_paper.sdrf import SDRFDataset
-from bronstein_paper.seeds import test_seeds
+from bronstein_paper.seeds import test_seeds, val_seeds
 from bronstein_paper.splits import set_train_val_test_split_frac, set_train_val_test_split
 
 if __name__ == '__main__':
@@ -32,47 +33,58 @@ if __name__ == '__main__':
     # with open('dt/processed/Cora_sdrf_ms=100_re=True_rb=0.95_tau=163_lcc=True_undirected.pt', 'rb') as f:
     #     dataset.data = torch.load(f)[0]
     G = to_networkx(dataset.data)
-    print((1754, 721) in G.edges)
-    print((338, 2243) in G.edges)
-    print((926, 1517) in G.edges)
-    print((211, 465) in G.edges)
+    # print((1754, 721) in G.edges)
+    # print((338, 2243) in G.edges)
+    # print((926, 1517) in G.edges)
+    # print((211, 465) in G.edges)
 
     # added(1861, 1269)
     # removed(338, 2243)
     # added(1846, 1980)
     # removed(211, 465)
 
-    val_accs = []
-    test_accs = []
-    for seed in test_seeds:
-        data = set_train_val_test_split(seed, dataset.data)
-        dataset.data = data
-        model = GCN(dataset, dropout=dropout_Cora_sdrf, hidden=hidden_Cora_sdrf)
-        optimizer = get_optimizer('adam', model, lr_Cora_sdrf, decay_Cora_sdrf)
-        # print(1)
-
-        best_val = 0
-        best_test = 0
-        for epoch in range(1001):
-            loss = train(model, optimizer, data)
-            # if epoch % 100 == 0:
-                # print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}')
-            # print(loss)
-            ed = evaluate(model, data, test=True)
-            val = ed['val_acc']
-            test = ed['test_acc']
-            if val > best_val:
-                best_val = val
-            # if test > best_test:
-                best_test = test
-        print('val', best_val)
-        val_accs.append(best_val)
-        print('test', best_test)
-        test_accs.append(best_test)
-    print(val_accs)
-    print(test_accs)
-    print(np.mean(val_accs))
-    print(np.mean(test_accs))
+    # val_accs = []
+    # vals = []
+    # test_accs = []
+    # for seed in val_seeds:
+    #     data = set_train_val_test_split(seed, dataset.data)
+    #     dataset.data = data
+    #     model = GCN(dataset, dropout=dropout_Cora_sdrf, hidden=hidden_Cora_sdrf)
+    #     optimizer = get_optimizer('adam', model, lr_Cora_sdrf, decay_Cora_sdrf)
+    #     # print(1)
+    #
+    #     best_val = 0
+    #     best_test = 0
+    #     cur_vals = []
+    #     for epoch in range(1001):
+    #         # 81.2
+    #         loss = train(model, optimizer, data)
+    #         # if epoch % 100 == 0:
+    #             # print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}')
+    #         # print(loss)
+    #         ed = evaluate(model, data, test=True)
+    #         val = ed['val_acc']
+    #         cur_vals.append(val)
+    #     test = ed['test_acc']
+    #         # if val > best_val:
+    #         #     best_epoch = epoch
+    #         #     best_val = val
+    #         # if test > best_test:
+    #         #     best_test = test
+    #     # vals.append(cur_vals)
+    #     print('val', val)
+    #     val_accs.append(val)
+    #     test_accs.append(test)
+    #     # print('test', best_test)
+    #     # test_accs.append(best_test)
+    # # with open('vals', 'wb') as f:
+    # #     pickle.dump(vals, f)
+    # # print(np.array(vals).mean(axis=0))
+    # print(val_accs)
+    # print(test_accs)
+    # # print(test_accs)
+    # print(np.mean(val_accs))
+    # print(np.mean(test_accs))
     # biased test set with rewiring
     # [0.8536764705882353, 0.8522058823529411, 0.8492647058823529, 0.85, 0.850735294117647, 0.8492647058823529,
     #  0.850735294117647, 0.8485294117647059, 0.85, 0.8492647058823529, 0.8514705882352941, 0.8522058823529411,
