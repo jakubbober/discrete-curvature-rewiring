@@ -1,5 +1,7 @@
 import pickle
+from copy import deepcopy
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.optim import Optimizer
@@ -20,16 +22,15 @@ def training_loop(model, optimizer, data, epochs, patience):
         train(model, optimizer, data)
         acc = evaluate(model, data, test=False)['val_acc']
         if acc >= max_acc:
-            best_epoch = epoch
             max_acc = acc
-            best_state_dict = model.state_dict()
+            best_state_dict = deepcopy(model.state_dict())
             streak = 0
         else:
             streak += 1
         if streak >= patience:
             model.load_state_dict(best_state_dict)
             return model
-    print(best_epoch)
+    model.load_state_dict(best_state_dict)
     return model
 
 
