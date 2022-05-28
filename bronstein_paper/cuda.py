@@ -238,7 +238,7 @@ def sdrf(
                 )
             ]
             G.add_edge(k, l)
-            print(f'added {k, l}')
+            # print(f'added {k, l}')
             if is_undirected:
                 A[k, l] = A[l, k] = 1
             else:
@@ -254,7 +254,7 @@ def sdrf(
             y = ix_max % N
             if C[x, y] > removal_bound:
                 G.remove_edge(x, y)
-                print(f'removed {x, y}')
+                # print(f'removed {x, y}')
                 if is_undirected:
                     A[x, y] = A[y, x] = 0
                 else:

@@ -2,6 +2,11 @@ import numpy as np
 from torch_geometric.data import InMemoryDataset
 
 
+def split_data():
+    # TODO avoid duplicate code in eval_performance and evaluate_curvatures
+    pass
+
+
 def softmax(a, tau=1):
     if tau == float('inf'):
         r = np.zeros(len(a))
