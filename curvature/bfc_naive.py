@@ -1,3 +1,6 @@
+"""
+Unused implementation of Balanced Forman Curvature with naive implementation to help understand the definition of BFC.
+"""
 import networkx as nx
 
 

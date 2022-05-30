@@ -1,17 +1,14 @@
-import numpy as np
+"""
+Adapted from https://github.com/jctops/understanding-oversquashing/blob/main/gdl/src/gdl/data/base.py.
+"""
 import os
+
+import numpy as np
 import torch
 from torch_geometric.data import Data, InMemoryDataset
-from torch_geometric.datasets import (
-    Planetoid,
-    Amazon,
-    Coauthor,
-    WebKB,
-    WikipediaNetwork,
-    Actor,
-)
+from torch_geometric.datasets import Planetoid, Amazon, Coauthor, WebKB, WikipediaNetwork, Actor
 
-from bronstein_paper.utils import get_undirected_adj_matrix
+from utils.adjacency_matrix_ops import get_undirected_adj_matrix
 
 DEFAULT_DATA_PATH = "dt"
 
@@ -35,7 +32,7 @@ def remap_edges(edges: list, mapper: dict) -> list:
 
 def get_component(dataset: InMemoryDataset, start: int = 0) -> set:
     visited_nodes = set()
-    queued_nodes = set([start])
+    queued_nodes = {start}
     row, col = dataset.data.edge_index.numpy()
     while queued_nodes:
         current_node = queued_nodes.pop()
@@ -59,9 +56,7 @@ def get_largest_connected_component(dataset: InMemoryDataset) -> np.ndarray:
     return np.array(list(comps[np.argmax(list(map(len, comps)))]))
 
 
-def get_dataset(
-    name: str, use_lcc: bool = True, data_dir=DEFAULT_DATA_PATH
-) -> InMemoryDataset:
+def get_dataset(name: str, use_lcc: bool = True, data_dir=DEFAULT_DATA_PATH) -> InMemoryDataset:
     path = os.path.join(data_dir, name)
     if name in ["Cora", "Citeseer", "Pubmed"]:
         dataset = Planetoid(path, name)
@@ -106,17 +101,17 @@ def get_dataset(
     return dataset
 
 
-class BaseDataset(InMemoryDataset):
+class DataLoader(InMemoryDataset):
     """
     Data preprocessed by being made undirected.
     """
 
     def __init__(
-        self,
-        name: str = "Cora",
-        use_lcc: bool = True,
-        undirected: bool = False,
-        data_dir: str = None,
+            self,
+            name: str = "Cora",
+            use_lcc: bool = True,
+            undirected: bool = False,
+            data_dir: str = None,
     ):
         self.name = name
         self.use_lcc = use_lcc
@@ -128,7 +123,7 @@ class BaseDataset(InMemoryDataset):
             data_dir = DEFAULT_DATA_PATH
         self.data_dir = data_dir
 
-        super(BaseDataset, self).__init__(self.data_dir)
+        super(DataLoader, self).__init__(self.data_dir)
         self.data, self.slices = torch.load(self.processed_paths[0])
 
     @property

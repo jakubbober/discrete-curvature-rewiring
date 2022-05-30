@@ -1,22 +1,14 @@
+"""
+Adapted from https://github.com/jctops/understanding-oversquashing/blob/main/gdl/src/gdl/curvature/cuda.py.
+"""
 import math
-from numba import cuda
+
 import numpy as np
 import torch
-from torch_geometric.utils import (
-    to_networkx,
-    from_networkx,
-    to_dense_adj,
-    remove_self_loops,
-    to_undirected,
-)
-from tqdm import tqdm
-
-from bronstein_paper.utils import softmax
+from numba import cuda
 
 
-@cuda.jit(
-    "void(float32[:,:], float32[:,:], float32[:], float32[:], int32, float32[:,:])"
-)
+@cuda.jit("void(float32[:,:], float32[:,:], float32[:], float32[:], int32, float32[:,:])")
 def _balanced_forman_curvature(A, A2, d_in, d_out, N, C):
     i, j = cuda.grid(2)
 
@@ -51,9 +43,7 @@ def _balanced_forman_curvature(A, A2, d_in, d_out, N, C):
                 if TMP > lambda_ij:
                     lambda_ij = TMP
 
-        C[i, j] = (
-            (2 / d_max) + (2 / d_min) - 2 + (2 / d_max + 1 / d_min) * A2[i, j] * A[i, j]
-        )
+        C[i, j] = ((2 / d_max) + (2 / d_min) - 2 + (2 / d_max + 1 / d_min) * A2[i, j] * A[i, j])
         if lambda_ij > 0:
             C[i, j] += sharp_ij / (d_max * lambda_ij)
 
@@ -75,12 +65,9 @@ def balanced_forman_curvature(A, C=None):
     return C
 
 
-@cuda.jit(
-    "void(float32[:,:], float32[:,:], float32, float32, int32, float32[:,:], int32, int32, int32[:], int32[:], int32, int32)"
-)
-def _balanced_forman_post_delta(
-    A, A2, d_in_x, d_out_y, N, D, x, y, i_neighbors, j_neighbors, dim_i, dim_j
-):
+@cuda.jit("void(float32[:,:], float32[:,:], float32, float32, int32, float32[:,:], "
+          "int32, int32, int32[:], int32[:], int32, int32)")
+def _balanced_forman_post_delta(A, A2, d_in_x, d_out_y, N, D, x, y, i_neighbors, j_neighbors, dim_i, dim_j):
     I, J = cuda.grid(2)
 
     if (I < dim_i) and (J < dim_j):
@@ -149,9 +136,7 @@ def _balanced_forman_post_delta(
                 if TMP > lambda_ij:
                     lambda_ij = TMP
 
-        D[I, J] = (
-            (2 / d_max) + (2 / d_min) - 2 + (2 / d_max + 1 / d_min) * A2_x_y * A[x, y]
-        )
+        D[I, J] = ((2 / d_max) + (2 / d_min) - 2 + (2 / d_max + 1 / d_min) * A2_x_y * A[x, y])
         if lambda_ij > 0:
             D[I, J] += sharp_ij / (d_max * lambda_ij)
 
@@ -169,98 +154,6 @@ def balanced_forman_post_delta(A, x, y, i_neighbors, j_neighbors, D=None):
     blockspergrid_y = math.ceil(D.shape[1] / threadsperblock[1])
     blockspergrid = (blockspergrid_x, blockspergrid_y)
 
-    _balanced_forman_post_delta[blockspergrid, threadsperblock](
-        A,
-        A2,
-        d_in,
-        d_out,
-        N,
-        D,
-        x,
-        y,
-        np.array(i_neighbors),
-        np.array(j_neighbors),
-        D.shape[0],
-        D.shape[1],
-    )
+    _balanced_forman_post_delta[blockspergrid, threadsperblock](A, A2, d_in, d_out, N, D, x, y, np.array(i_neighbors),
+                                                                np.array(j_neighbors), D.shape[0], D.shape[1])
     return D
-
-
-def sdrf(
-    data,
-    loops=10,
-    remove_edges=True,
-    removal_bound=0.5,
-    tau=1,
-    is_undirected=True,
-):
-    edge_index = data.edge_index
-    if is_undirected:
-        edge_index = to_undirected(edge_index)
-    A = to_dense_adj(remove_self_loops(edge_index)[0])[0]
-    N = A.shape[0]
-    G = to_networkx(data)
-    if is_undirected:
-        G = G.to_undirected()
-    A = A.cuda()
-    C = torch.zeros(N, N).cuda()
-
-    for x in tqdm(range(loops)):
-        can_add = True
-        balanced_forman_curvature(A, C=C)
-        ix_min = C.argmin().item()
-        x = ix_min // N
-        y = ix_min % N
-
-        if is_undirected:
-            x_neighbors = list(G.neighbors(x)) + [x]
-            y_neighbors = list(G.neighbors(y)) + [y]  # changed from x to y
-        else:
-            x_neighbors = list(G.successors(x)) + [x]
-            y_neighbors = list(G.predecessors(y)) + [y]  # changed from x to y
-        candidates = []
-        for i in x_neighbors:
-            for j in y_neighbors:
-                if (i != j) and (not G.has_edge(i, j)):
-                    candidates.append((i, j))
-
-        if len(candidates):
-            D = balanced_forman_post_delta(A, x, y, x_neighbors, y_neighbors)
-            improvements = []
-            for (i, j) in candidates:
-                improvements.append(
-                    (D - C[x, y])[x_neighbors.index(i), y_neighbors.index(j)].item()
-                )
-
-            k, l = candidates[
-                np.random.choice(
-                    range(len(candidates)), p=softmax(np.array(improvements), tau=tau)
-                )
-            ]
-            G.add_edge(k, l)
-            # print(f'added {k, l}')
-            if is_undirected:
-                A[k, l] = A[l, k] = 1
-            else:
-                A[k, l] = 1
-        else:
-            can_add = False
-            if not remove_edges:
-                break
-
-        if remove_edges:
-            ix_max = C.argmax().item()
-            x = ix_max // N
-            y = ix_max % N
-            if C[x, y] > removal_bound:
-                G.remove_edge(x, y)
-                # print(f'removed {x, y}')
-                if is_undirected:
-                    A[x, y] = A[y, x] = 0
-                else:
-                    A[x, y] = 0
-            else:
-                if can_add is False:
-                    break
-
-    return from_networkx(G)

@@ -117,6 +117,6 @@ hyperparams = {
         'weight_decay': 0.0126,
         'max_iterations': 3249,
         'tau': 106,
-        'removal_bound': 7.91
+        'removal_bound': 0
     }
 }

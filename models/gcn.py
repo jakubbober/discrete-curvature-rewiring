@@ -1,28 +1,44 @@
+"""
+Adopted from https://github.com/jctops/understanding-oversquashing/blob/main/gdl/src/gdl/models/gcn.py.
+"""
+from typing import List
+
 import torch
-import torch.nn.functional as F
-from torch.nn import Linear
+from torch.nn import ModuleList, Dropout, ReLU
+from torch_geometric.data import Data, InMemoryDataset
 from torch_geometric.nn import GCNConv
 
 
 class GCN(torch.nn.Module):
-    def __init__(self, d_input, d_output, d_hidden=16):
+    def __init__(self, dataset: InMemoryDataset, hidden: List[int] = [64], dropout: float = 0.5):
         super(GCN, self).__init__()
 
-        # Initialize the layers
-        self.conv1 = GCNConv(d_input, d_hidden)
-        self.conv2 = GCNConv(d_hidden, d_output)
-        # self.out = Linear(d_hidden, d_output)
+        num_features = [dataset.data.x.shape[1]] + hidden + [dataset.num_classes]
+        layers = []
+        for in_features, out_features in zip(num_features[:-1], num_features[1:]):
+            layers.append(GCNConv(in_features, out_features))
+        self.layers = ModuleList(layers)
 
-    def forward(self, data):
-        x, edge_index = data.x, data.edge_index
-        # First Message Passing Layer (Transformation)
-        x = self.conv1(x, edge_index)
-        x = x.relu()
-        x = F.dropout(x, training=self.training)
+        self.reg_params = list(layers[0].parameters())
+        self.non_reg_params = list([p for l in layers[1:] for p in l.parameters()])
 
-        # Second Message Passing Layer
-        x = self.conv2(x, edge_index)
+        self.dropout = Dropout(p=dropout)
+        self.act_fn = ReLU()
 
-        # Output layer
-        x = F.softmax(x, dim=1)
-        return x
+    def reset_parameters(self):
+        for layer in self.layers:
+            layer.reset_parameters()
+
+    def forward(self, data: Data):
+        x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
+
+        for i, layer in enumerate(self.layers):
+            x = layer(x, edge_index, edge_weight=edge_attr)
+
+            if i == len(self.layers) - 1:
+                break
+
+            x = self.act_fn(x)
+            x = self.dropout(x)
+
+        return torch.nn.functional.log_softmax(x, dim=1)
