@@ -6,7 +6,7 @@ import scipy.sparse.csr
 from gtda.homology import VietorisRipsPersistence
 
 
-def random_graph_adj(nodes: int, p: float = 0.3, w_low: int = 1, w_high: int = 20) -> np.ndarray:
+def random_graph_adj(nodes: int, p: float = 0.3, w_low: int = 1, w_high: int = 100) -> np.ndarray:
     """
     Create an adjacency matrix of a random graph.
     :param nodes: number of nodes for the random graph.

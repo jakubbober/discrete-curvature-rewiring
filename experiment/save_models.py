@@ -97,7 +97,7 @@ def save_models(dname: str, curv_type: str, patience: int = 10, redo_rewiring: b
 
 
 if __name__ == '__main__':
-    datasets = ['Computers', 'Photo', 'CoauthorCS']
+    datasets = ['Cora', 'Citeseer', 'Pubmed', 'Cornell', 'Texas', 'Wisconsin', 'Chameleon', 'Squirrel', 'Actor', 'Computers', 'Photo', 'CoauthorCS']
     curvatures = [None, '1d', 'augmented', 'haantjes', 'bfc']
 
     for name in datasets:

@@ -102,10 +102,6 @@ def get_dataset(name: str, use_lcc: bool = True, data_dir=DEFAULT_DATA_PATH) -> 
 
 
 class DataLoader(InMemoryDataset):
-    """
-    Data preprocessed by being made undirected.
-    """
-
     def __init__(
             self,
             name: str = "Cora",

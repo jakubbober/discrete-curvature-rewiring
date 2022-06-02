@@ -29,36 +29,6 @@ hyperparams = {
         'tau': 115,
         'removal_bound': 14.43
     },
-    'Computers': {
-        'dropout': 0.3396,
-        'hidden_depth': 1,
-        'hidden_dim': 128,
-        'learning_rate': 0.0244,
-        'weight_decay': 0.1076,
-        'max_iterations': 100,
-        'tau': 163,
-        'removal_bound': 0.95
-    },
-    'Photo': {
-        'dropout': 0.3396,
-        'hidden_depth': 1,
-        'hidden_dim': 128,
-        'learning_rate': 0.0244,
-        'weight_decay': 0.1076,
-        'max_iterations': 100,
-        'tau': 163,
-        'removal_bound': 0.95
-    },
-    'CoauthorCS': {
-        'dropout': 0.3396,
-        'hidden_depth': 1,
-        'hidden_dim': 128,
-        'learning_rate': 0.0244,
-        'weight_decay': 0.1076,
-        'max_iterations': 100,
-        'tau': 163,
-        'removal_bound': 0.95
-    },
     'Cornell': {
         'dropout': 0.2911,
         'hidden_depth': 1,
@@ -118,5 +88,35 @@ hyperparams = {
         'max_iterations': 3249,
         'tau': 106,
         'removal_bound': 0
+    },
+    'Computers': {
+        'dropout': 0.3396,
+        'hidden_depth': 1,
+        'hidden_dim': 128,
+        'learning_rate': 0.0244,
+        'weight_decay': 0.1076,
+        'max_iterations': 100,
+        'tau': 163,
+        'removal_bound': 0.95
+    },
+    'Photo': {
+        'dropout': 0.3396,
+        'hidden_depth': 1,
+        'hidden_dim': 128,
+        'learning_rate': 0.0244,
+        'weight_decay': 0.1076,
+        'max_iterations': 100,
+        'tau': 163,
+        'removal_bound': 0.95
+    },
+    'CoauthorCS': {
+        'dropout': 0.3396,
+        'hidden_depth': 1,
+        'hidden_dim': 128,
+        'learning_rate': 0.0244,
+        'weight_decay': 0.1076,
+        'max_iterations': 100,
+        'tau': 163,
+        'removal_bound': 0.95
     }
 }

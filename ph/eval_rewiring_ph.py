@@ -4,9 +4,10 @@ import gudhi
 import networkx as nx
 from torch_geometric.utils import from_networkx, to_networkx
 
-from curvature.compute_curvature import compute_curvature
-from jctops.sdrf import sdrf_w_cuda
+# from curvature.compute_curvature import compute_curvature
+# from jctops.sdrf import sdrf_w_cuda
 from ph import compute_ph
+from rewiring.sdrf_cuda_bfc import sdrf_cuda_bfc
 
 
 def eval_rewiring_ph(nodes: int, p: float, n: int = 20, rewiring_loops=100) -> List[float]:
@@ -23,18 +24,21 @@ def eval_rewiring_ph(nodes: int, p: float, n: int = 20, rewiring_loops=100) -> L
     for i in range(n):
         adj1 = compute_ph.random_graph_adj(nodes, p)
         G1 = nx.from_scipy_sparse_matrix(adj1)
-        G1, C1 = compute_curvature(G1, 'formanCurvature')
-
-        ph1 = compute_ph.compute_ph(C1)
-
+        # G1, C1 = compute_curvature(G1, 'formanCurvature')
+        # print(adj1.max())
+        ph1 = compute_ph.compute_ph(adj1)
+        print(ph1)
         nx.set_node_attributes(G1, 0, 'x')
         data1 = from_networkx(G1)
 
-        data2 = sdrf_w_cuda(data1, loops=rewiring_loops)
+        data2 = sdrf_cuda_bfc(data1, loops=rewiring_loops, remove_edges=True, removal_bound=0, tau=100, is_undirected=True)
         G2 = to_networkx(data2)
-        G2, C2 = compute_curvature(G2, 'formanCurvature')
 
-        ph2 = compute_ph.compute_ph(C2)
+        adj2 = compute_ph.random_graph_adj(nodes, p)
+        # G2, C2 = compute_curvature(G2, 'formanCurvature')
+        # print(adj2.max())
+        ph2 = compute_ph.compute_ph(adj2)
+        print(ph2)
         bnds.append(gudhi.bottleneck_distance(ph1, ph2))
 
     return bnds
