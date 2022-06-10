@@ -42,18 +42,23 @@ def compute_adj_powers(data: torch_geometric.data.Data, r: int) -> List[float]:
         edges.append((i, j))
         result.append(np.min(A_pow[np.nonzero(A_pow)]))
         A_pow = A_pow @ A_norm_aug
-    return result, edges
+    return result
 
 
 if __name__ == '__main__':
     dnames = ['Cora', 'Citeseer', 'Cornell', 'Texas', 'Wisconsin', 'Chameleon', 'Squirrel']
     # dnames = ['Cora', 'Citeseer', 'Cornell', 'Texas', 'Wisconsin', 'Chameleon', 'Squirrel', 'Actor']
+    i = 50
     for d in dnames:
         # print(d)
         dt = DataLoader(d, undirected=True, data_dir='dt')
-        res = compute_adj_powers(dt.data, 20)
+        res = compute_adj_powers(dt.data, i)
         plt.plot(range(1, len(res) + 1), res, label=d)
     plt.yscale('log')
-    plt.xticks(range(1, 20 + 1))
+    plt.xscale('log')
+    plt.title('Log-log plot of minimum non-zero values of powers of normalised augmented adjacency matrix')
+    plt.xlabel('Power')
+    plt.ylabel('Minimum non-zero value')
+    # plt.xticks(range(1, i + 1, 5))
     plt.legend()
     plt.show()

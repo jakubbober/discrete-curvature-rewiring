@@ -55,7 +55,10 @@ def sdrf_no_cuda(data, curv_type, loops, remove_edges, removal_bound, tau):
                 break
         if remove_edges:
             # Choose the edge with the highest curvature and potentially delete it.
-            x, y = max([edge for edge in G.edges if edge != (k, l)], key=lambda e: curv_dict[e[0]][e[1]])
+            if len(candidates):
+                x, y = max([edge for edge in G.edges if edge != (k, l)], key=lambda e: curv_dict[e[0]][e[1]])
+            else:
+                x, y = max([edge for edge in G.edges], key=lambda e: curv_dict[e[0]][e[1]])
             if curv_dict[x][y] > removal_bound:
                 G.remove_edge(x, y)
             else:

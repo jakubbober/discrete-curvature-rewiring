@@ -1,3 +1,7 @@
+"""
+Adapted from https://github.com/jctops/understanding-oversquashing/blob/main/gdl/src/gdl/data/utils.py.
+"""
+
 import numpy as np
 from torch_geometric.data import InMemoryDataset
 

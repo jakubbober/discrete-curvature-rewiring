@@ -1,3 +1,7 @@
+"""
+Fetched from https://github.com/jctops/understanding-oversquashing/blob/main/gdl/src/gdl/seeds.py.
+"""
+
 test_seeds = [
     2406525885,
     3164031153,

@@ -1,3 +1,7 @@
+"""
+Adapted from https://github.com/YueqiCao/PD-subsample/blob/main/ApproxPH.py.
+"""
+
 import pickle
 from typing import List
 

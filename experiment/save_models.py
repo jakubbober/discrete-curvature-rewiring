@@ -1,5 +1,6 @@
 import os
 import pickle
+import random
 import time
 from typing import List
 
@@ -52,7 +53,7 @@ def save_models(dname: str, curv_type: str, patience: int = 10, redo_rewiring: b
         return dt.edge_index
 
     # If redo_rewiring is set to False, save graph edge index.
-    if not redo_rewiring:
+    if not redo_rewiring or curv_type is None:
         dataset.data.edge_index = rewire(dataset.data)
 
         os.makedirs(f'edge_indices/{dname}', exist_ok=True)
@@ -63,17 +64,18 @@ def save_models(dname: str, curv_type: str, patience: int = 10, redo_rewiring: b
 
     # Save the models performing best on validation set using early stopping.
     for i, seed in enumerate(tqdm(val_seeds)):
+        random.seed(seed)
         # If redo_rewiring is set to True, save the edge indices for current iteration.
-        if redo_rewiring:
+        if redo_rewiring and curv_type is not None:
+            dataset = DataLoader(dname, undirected=True, data_dir='dt')
             dataset.data.edge_index = rewire(dataset.data)
-            os.makedirs(f'edge_indices/{dname}_redo_rewiring/{curv_type}', exist_ok=True)
-            with open(f'edge_indices/{dname}_redo_rewiring/{curv_type}/edge_index_{curv_type}'
+            os.makedirs(f'edge_indices/{dname}_redo_rewiring/{str(curv_type)}', exist_ok=True)
+            with open(f'edge_indices/{dname}_redo_rewiring/{str(curv_type)}/edge_index_{curv_type}'
                       f'_{str(0) + str(i) if i < 10 else str(i)}.pk', 'wb') as f:
                 pickle.dump(dataset.data.edge_index, f)
 
         # Split the data accordingly.
         if dname in ('Cora', 'Citeseer', 'Pubmed', 'Computers', 'Photo', 'CoauthorCS'):
-            # TODO remove duplication with test_performance.py
             data = set_train_val_test_split(seed, dataset.data)
         else:
             data = set_train_val_test_split_frac(seed, dataset.data, val_frac=0.2, test_frac=0.2)
@@ -97,15 +99,15 @@ def save_models(dname: str, curv_type: str, patience: int = 10, redo_rewiring: b
 
 
 if __name__ == '__main__':
-    datasets = ['Cora', 'Citeseer', 'Pubmed', 'Cornell', 'Texas', 'Wisconsin', 'Chameleon', 'Squirrel', 'Actor', 'Computers', 'Photo', 'CoauthorCS']
+    datasets = ['Cora', 'Citeseer', 'Cornell', 'Texas', 'Wisconsin', 'Pubmed']
     curvatures = [None, '1d', 'augmented', 'haantjes', 'bfc']
 
     for name in datasets:
         for curvature in curvatures:
             try:
-                sd = save_models(name, curvature)
-                os.makedirs(f'state_dicts_hyperparams/{name}', exist_ok=True)
-                with open(f'state_dicts_hyperparams/{name}/state_dicts_{curvature}.pk', 'wb') as file:
+                sd = save_models(name, curvature, redo_rewiring=False)
+                os.makedirs(f'state_dicts/{name}', exist_ok=True)
+                with open(f'state_dicts/{name}/state_dicts_{str(curvature)}.pk', 'wb') as file:
                     pickle.dump(sd, file)
             except Exception as e:
                 print(str(name), str(curvature), str(e))
