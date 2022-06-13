@@ -1,7 +1,6 @@
 import os
 import pickle
 import random
-import time
 from typing import List
 
 import torch.optim
@@ -11,8 +10,7 @@ from experiment.data_loader import DataLoader
 from experiment.data_splits import set_train_val_test_split, set_train_val_test_split_frac
 from experiment.training_loop import training_loop
 from models.gcn import GCN
-from rewiring.sdrf_cuda_bfc import sdrf_cuda_bfc
-from rewiring.sdrf_no_cuda import sdrf_no_cuda
+from rewiring.rewire import rewire
 from utils.hyperparams import hyperparams
 from utils.seeds import val_seeds
 
@@ -39,25 +37,12 @@ def save_models(dname: str, curv_type: str, patience: int = 10, redo_rewiring: b
     # Create an undirected dataset.
     dataset = DataLoader(dname, undirected=True, data_dir='dt')
 
-    # Perform graph rewiring, print out rewiring time.
-    def rewire(dt):
-        start = time.time()
-        if curv_type == 'bfc':
-            dt = sdrf_cuda_bfc(dt, loops=max_iterations, remove_edges=True,
-                               removal_bound=removal_bound, tau=tau, is_undirected=True)
-        elif curv_type is not None:
-            dt = sdrf_no_cuda(dt, curv_type, loops=max_iterations, remove_edges=True,
-                              removal_bound=removal_bound, tau=tau)
-        if curv_type is not None:
-            print(curv_type, dname, 'time:', str(time.time() - start))
-        return dt.edge_index
-
     # If redo_rewiring is set to False, save graph edge index.
     if not redo_rewiring or curv_type is None:
-        dataset.data.edge_index = rewire(dataset.data)
+        dataset.data.edge_index = rewire(dataset.data, curv_type, max_iterations, removal_bound, tau)
 
-        os.makedirs(f'edge_indices/{dname}', exist_ok=True)
-        with open(f'edge_indices/{dname}/edge_index_{curv_type}.pk', 'wb') as f:
+        os.makedirs(f'edge_indices_new/{dname}', exist_ok=True)
+        with open(f'edge_indices_new/{dname}/edge_index_{curv_type}.pk', 'wb') as f:
             pickle.dump(dataset.data.edge_index, f)
 
     state_dicts = []
@@ -68,7 +53,7 @@ def save_models(dname: str, curv_type: str, patience: int = 10, redo_rewiring: b
         # If redo_rewiring is set to True, save the edge indices for current iteration.
         if redo_rewiring and curv_type is not None:
             dataset = DataLoader(dname, undirected=True, data_dir='dt')
-            dataset.data.edge_index = rewire(dataset.data)
+            dataset.data.edge_index = rewire(dataset.data, curv_type, max_iterations, removal_bound, tau)
             os.makedirs(f'edge_indices/{dname}_redo_rewiring/{str(curv_type)}', exist_ok=True)
             with open(f'edge_indices/{dname}_redo_rewiring/{str(curv_type)}/edge_index_{curv_type}'
                       f'_{str(0) + str(i) if i < 10 else str(i)}.pk', 'wb') as f:
@@ -99,15 +84,15 @@ def save_models(dname: str, curv_type: str, patience: int = 10, redo_rewiring: b
 
 
 if __name__ == '__main__':
-    datasets = ['Cora', 'Citeseer', 'Cornell', 'Texas', 'Wisconsin', 'Pubmed']
+    datasets = ['Pubmed', 'Chameleon', 'Squirrel', 'Actor', 'Computers', 'Photo', 'CoauthorCS'] # ['Cornell', 'Texas', 'Wisconsin']
     curvatures = [None, '1d', 'augmented', 'haantjes', 'bfc']
 
     for name in datasets:
         for curvature in curvatures:
             try:
                 sd = save_models(name, curvature, redo_rewiring=False)
-                os.makedirs(f'state_dicts/{name}', exist_ok=True)
-                with open(f'state_dicts/{name}/state_dicts_{str(curvature)}.pk', 'wb') as file:
+                os.makedirs(f'state_dicts_new/{name}', exist_ok=True)
+                with open(f'state_dicts_new/{name}/state_dicts_{str(curvature)}.pk', 'wb') as file:
                     pickle.dump(sd, file)
             except Exception as e:
                 print(str(name), str(curvature), str(e))

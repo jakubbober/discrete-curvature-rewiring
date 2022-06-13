@@ -33,63 +33,51 @@ def test_performance(dname: str, curv_type: str, test: bool = True,
     hidden_dim = hyperparams[dname]['hidden_dim']
 
     # Fetch corresponding state dictionary.
-    if curv_type is not None:
-        with open(f'state_dicts/{dname}/state_dicts_{str(curv_type)}_best.pk', 'rb') as f:
-            state_dict = pickle.load(f)
-    else:
-        with open(f'state_dicts/{dname}/state_dicts_{str(curv_type)}.pk', 'rb') as f:
-            state_dict = pickle.load(f)
+    with open(f'state_dicts_new/{dname}/state_dicts_{str(curv_type)}.pk', 'rb') as f:
+        state_dicts = pickle.load(f)
 
     dataset = DataLoader(dname, undirected=True, data_dir='dt')
 
     # If redo_rewiring is set to False, fetch corresponding graph edge index.
-    if curv_type is not None:
-        with open(f'edge_indices/{dname}/edge_index_{str(curv_type)}_best.pk', 'rb') as f:
-            edge_index = pickle.load(f)
-            dataset.data.edge_index = edge_index
-    else:
-        with open(f'edge_indices/{dname}/edge_index_{str(curv_type)}.pk', 'rb') as f:
-            edge_index = pickle.load(f)
-            dataset.data.edge_index = edge_index
+    if not redo_rewiring:
+        if curv_type is not None:
+            with open(f'edge_indices_new/{dname}/edge_index_{str(curv_type)}.pk', 'rb') as f:
+                edge_index = pickle.load(f)
+                dataset.data.edge_index = edge_index
+        else:
+            with open(f'edge_indices_new/{dname}/edge_index_{str(curv_type)}.pk', 'rb') as f:
+                edge_index = pickle.load(f)
+                dataset.data.edge_index = edge_index
 
     val_accs = []
     test_accs = []
-    
-    best_val_acc = 0
-    seed = random.randint(1, 10000)
-    # i = -1
-    # for seed, state_dict in zip(val_seeds, state_dicts) if not test else zip(test_seeds, state_dicts):
-    #     random.seed(seed)
-    #     i += 1
-    # If redo_rewiring is set to True, fetch corresponding graph edge index for current iteration.
-    # if redo_rewiring and curv_type is not None:
-    #     with open(f'edge_indices/{dname}_redo_rewiring/{str(curv_type)}/edge_index_{str(curv_type)}'
-    #               f'_{str(0) + str(i) if i < 10 else str(i)}.pk', 'rb') as f:
-    #         edge_index = pickle.load(f)
-    #         dataset.data.edge_index = edge_index
-    if dname in ('Cora', 'Citeseer', 'Pubmed', 'Computers', 'Photo', 'CoauthorCS'):
-        data = set_train_val_test_split(seed, dataset.data)
-    else:
-        data = set_train_val_test_split_frac(seed, dataset.data, val_frac=0.2, test_frac=0.2)
-    dataset.data = data
 
-    # Fetch corresponding state dictionary and evaluate the model
-    model = GCN(dataset=dataset, hidden=[hidden_dim] * hidden_depth, dropout=dropout)
-    model.load_state_dict(state_dict)
+    i = -1
+    for seed, state_dict in zip(val_seeds, state_dicts) if not test else zip(test_seeds, state_dicts):
+        random.seed(seed)
+        i += 1
+        # If redo_rewiring is set to True, fetch corresponding graph edge index for current iteration.
+        if redo_rewiring and curv_type is not None:
+            with open(f'edge_indices/{dname}_redo_rewiring/{str(curv_type)}/edge_index_{str(curv_type)}'
+                      f'_{str(0) + str(i) if i < 10 else str(i)}.pk', 'rb') as f:
+                edge_index = pickle.load(f)
+                dataset.data.edge_index = edge_index
+        if dname in ('Cora', 'Citeseer', 'Pubmed', 'Computers', 'Photo', 'CoauthorCS'):
+            data = set_train_val_test_split(seed, dataset.data)
+        else:
+            data = set_train_val_test_split_frac(seed, dataset.data, val_frac=0.2, test_frac=0.2)
+        dataset.data = data
 
-    ed = evaluate(model, dataset.data, test=test)
+        # Fetch corresponding state dictionary and evaluate the model
+        model = GCN(dataset=dataset, hidden=[hidden_dim] * hidden_depth, dropout=dropout)
+        model.load_state_dict(state_dict)
 
-    if redo_rewiring and curv_type is not None and ed['val_acc'] > best_val_acc:
-        with open(f'edge_indices/{dname}/edge_index_{str(curv_type)}_best.pk', 'wb') as f:
-            pickle.dump(edge_index, f)
-        with open(f'state_dicts/{dname}/state_dicts_{str(curv_type)}_best.pk', 'wb') as f:
-            pickle.dump(state_dict, f)
-        best_val_acc = ed['val_acc']
+        ed = evaluate(model, dataset.data, test=test)
 
-    if not test:
-        val_accs.append(ed['val_acc'])
-    else:
-        test_accs.append(ed['test_acc'])
+        if not test:
+            val_accs.append(ed['val_acc'])
+        else:
+            test_accs.append(ed['test_acc'])
 
     if not test:
         return val_accs, np.mean(val_accs), np.std(val_accs)
@@ -98,20 +86,20 @@ def test_performance(dname: str, curv_type: str, test: bool = True,
 
 
 if __name__ == '__main__':
-    datasets = ['Cora', 'Citeseer', 'Cornell', 'Texas', 'Wisconsin']
+    datasets = ['Cornell', 'Texas', 'Wisconsin']
     curvatures = [None, '1d', 'augmented', 'haantjes', 'bfc']
     result = {d: [] for d in datasets}
     for name in datasets:
         print(name)
         for curvature in curvatures:
             print(str(curvature) + ":")
-            # try:
-            out = test_performance(name, curvature, test=True, redo_rewiring=False)
-            cell = str(round(out[1] * 100, 2)) + " +- " + str(round(out[2] * 100 * 0.196, 2))
-            # except:
+            try:
+                out = test_performance(name, curvature, test=True, redo_rewiring=False)
+                cell = str(round(out[1] * 100, 2)) + " +- " + str(round(out[2] * 100 * 0.196, 2))
+            except:
                 # If a corresponding file is not found, record error value.
                 # For example, there may have been a CUDA OOM error when calculating BFC for a dataset.
-                # cell = 'ERROR'
+                cell = 'ERROR'
             result[name].append(cell)
             print(cell)
             print()

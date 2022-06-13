@@ -4,6 +4,7 @@ import matplotlib
 import numpy as np
 import plotly.graph_objects
 from gtda.plotting import plot_diagram
+from matplotlib import pyplot as plt
 
 matplotlib.use('WebAgg')
 
@@ -20,6 +21,10 @@ def plot_ph(ph: np.ndarray) -> plotly.graph_objects.Figure:
 
 
 if __name__ == '__main__':
+    plt.rc('font', size=18)
+    plt.rc('axes', labelsize=18)
+    plt.rc('xtick', labelsize=18)
+    plt.rc('ytick', labelsize=18)
     with open('ph_before', 'rb') as f:
         ph_before = pickle.load(f)
     with open('ph_after', 'rb') as f:
