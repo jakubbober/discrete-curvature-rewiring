@@ -13,6 +13,9 @@ from models.gcn import GCN
 from rewiring.rewire import rewire
 from utils.hyperparams import hyperparams
 from utils.seeds import val_seeds
+import warnings
+from numba import NumbaPerformanceWarning
+warnings.filterwarnings("ignore", category=NumbaPerformanceWarning)
 
 
 def save_models(dname: str, curv_type: str, patience: int = 10, redo_rewiring: bool = False) -> List[dict]:
@@ -39,15 +42,17 @@ def save_models(dname: str, curv_type: str, patience: int = 10, redo_rewiring: b
 
     # If redo_rewiring is set to False, save graph edge index.
     if not redo_rewiring or curv_type is None:
+        print(f'Rewiring for {str(curv_type)} curvature...')
         dataset.data.edge_index = rewire(dataset.data, curv_type, max_iterations, removal_bound, tau)
 
-        os.makedirs(f'edge_indices_new/{dname}', exist_ok=True)
-        with open(f'edge_indices_new/{dname}/edge_index_{curv_type}.pk', 'wb') as f:
+        os.makedirs(f'edge_indices/{dname}', exist_ok=True)
+        with open(f'edge_indices/{dname}/edge_index_{curv_type}.pk', 'wb') as f:
             pickle.dump(dataset.data.edge_index, f)
 
     state_dicts = []
 
     # Save the models performing best on validation set using early stopping.
+    print('Training...')
     for i, seed in enumerate(tqdm(val_seeds)):
         random.seed(seed)
         # If redo_rewiring is set to True, save the edge indices for current iteration.
@@ -84,15 +89,18 @@ def save_models(dname: str, curv_type: str, patience: int = 10, redo_rewiring: b
 
 
 if __name__ == '__main__':
-    datasets = ['Pubmed', 'Chameleon', 'Squirrel', 'Actor', 'Computers', 'Photo', 'CoauthorCS'] # ['Cornell', 'Texas', 'Wisconsin']
+    datasets = ['Cornell', 'Texas', 'Wisconsin']
     curvatures = [None, '1d', 'augmented', 'haantjes', 'bfc']
 
     for name in datasets:
+        print(f'{name}:')
         for curvature in curvatures:
             try:
                 sd = save_models(name, curvature, redo_rewiring=False)
-                os.makedirs(f'state_dicts_new/{name}', exist_ok=True)
-                with open(f'state_dicts_new/{name}/state_dicts_{str(curvature)}.pk', 'wb') as file:
+                os.makedirs(f'state_dicts/{name}', exist_ok=True)
+                with open(f'state_dicts/{name}/state_dicts_{str(curvature)}.pk', 'wb') as file:
                     pickle.dump(sd, file)
             except Exception as e:
                 print(str(name), str(curvature), str(e))
+            print()
+        print()

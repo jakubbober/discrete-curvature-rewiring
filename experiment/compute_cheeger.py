@@ -91,7 +91,7 @@ if __name__ == '__main__':
         #     pickle.dump(r, f)
         # pd.DataFrame(result).to_excel('mc.xlsx')
 
-        with open(f'mc/{dname}.pk', 'rb') as f:
+        with open(f'past/mc/{dname}.pk', 'rb') as f:
             cheegers = pickle.load(f)
         # with open(f'mc/{dname}.pk', 'rb') as f:
         #     cheegers3k = pickle.load(f)
@@ -103,14 +103,9 @@ if __name__ == '__main__':
             if c < m:
                 m = c
             result.append(m)
-        # result = [min(cheegers[:i+1]) for i in range(0, len(cheegers), 1000)]
-        # print(2)
-        # print(result[-1])
         plt.plot(range(1, len(result) + 1), result, label=dname)
 
     plt.title('Cheeger Constant Monte Carlo Estimation')
-    # plt.yscale('log')
-    # plt.yticks([0.1, 0.3, 1])
     plt.xlabel('Number of iterations')
     plt.ylabel('Estimate')
     plt.legend(loc='lower left')

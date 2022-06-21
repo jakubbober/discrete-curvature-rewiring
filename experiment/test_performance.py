@@ -33,7 +33,7 @@ def test_performance(dname: str, curv_type: str, test: bool = True,
     hidden_dim = hyperparams[dname]['hidden_dim']
 
     # Fetch corresponding state dictionary.
-    with open(f'state_dicts_new/{dname}/state_dicts_{str(curv_type)}.pk', 'rb') as f:
+    with open(f'state_dicts/{dname}/state_dicts_{str(curv_type)}.pk', 'rb') as f:
         state_dicts = pickle.load(f)
 
     dataset = DataLoader(dname, undirected=True, data_dir='dt')
@@ -41,11 +41,11 @@ def test_performance(dname: str, curv_type: str, test: bool = True,
     # If redo_rewiring is set to False, fetch corresponding graph edge index.
     if not redo_rewiring:
         if curv_type is not None:
-            with open(f'edge_indices_new/{dname}/edge_index_{str(curv_type)}.pk', 'rb') as f:
+            with open(f'edge_indices/{dname}/edge_index_{str(curv_type)}.pk', 'rb') as f:
                 edge_index = pickle.load(f)
                 dataset.data.edge_index = edge_index
         else:
-            with open(f'edge_indices_new/{dname}/edge_index_{str(curv_type)}.pk', 'rb') as f:
+            with open(f'edge_indices/{dname}/edge_index_{str(curv_type)}.pk', 'rb') as f:
                 edge_index = pickle.load(f)
                 dataset.data.edge_index = edge_index
 
